@@ -1,0 +1,33 @@
+# ==========================================
+# IGNORE: Large data files
+# ==========================================
+
+# Results CSVs (too large)
+results/**/*.csv
+
+# Raw data
+*.xlsx
+*.xls
+
+# ==========================================
+# KEEP: Figures (these will be tracked)
+# ==========================================
+# (By not listing them, Git tracks them by default)
+# PNG, PDF, SVG figures will be included
+
+# ==========================================
+# IGNORE: Python stuff
+# ==========================================
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+*.ipynb
+
+# ==========================================
+# IGNORE: Environment / IDE
+# ==========================================
+.env
+venv/
+.vscode/
+.idea/
