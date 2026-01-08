@@ -6,7 +6,7 @@ from typing import Callable
 from pathlib import Path
 from scipy.interpolate import PchipInterpolator
 
-from .constants import (
+from constants import (
     EXCEL_PATH, SHEET_NAMES, CYTOKINE_COLS, CD4_COUNT_COL,
     TIMEPOINTS, CD3_CD28_COMBINATIONS
 )

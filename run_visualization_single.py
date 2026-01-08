@@ -8,7 +8,7 @@ from data import prepare_all_conditions
 from visualization import generate_single_condition_plots
 
 from models.model_1_literature import LiteratureModel_1_S
-SELECTED_MODEL = FullModel
+SELECTED_MODEL = LiteratureModel_1_S
 
 BASE_OUTPUT_DIR = Path(__file__).parent / "results"
 
