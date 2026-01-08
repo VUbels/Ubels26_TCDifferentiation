@@ -17,7 +17,7 @@ Parameters: 28 total
 
 import torch
 import torch.nn as nn
-from .base import BaseTcellModel
+from models.base import BaseTcellModel
 from constants import IL12_0
 
 

@@ -19,11 +19,11 @@ from optimization import run_single_condition
 # SELECT YOUR MODEL HERE
 # =============================================================================
 
-from models.model_3_full import FullModel
-SELECTED_MODEL = FullModel
+#from models.model_3_full import FullModel
+#SELECTED_MODEL = FullModel
 
-# from models.model_no_hill import NoHillModel
-# SELECTED_MODEL = NoHillModel
+from models.model_1_literature import LiteratureModel_1_S
+SELECTED_MODEL = LiteratureModel_1_S
 
 # =============================================================================
 # SETTINGS
@@ -31,7 +31,7 @@ SELECTED_MODEL = FullModel
 
 BASE_OUTPUT_DIR = Path("/mnt/d/UVA/TCR/2026_Updated/PSO_results")
 
-TARGET_FITS = 10000
+TARGET_FITS = 5000
 N_SWARMS = 300
 N_PARTICLES = 200
 N_ITERATIONS = 130
@@ -70,8 +70,8 @@ if __name__ == "__main__":
         n_swarms_per_batch=N_SWARMS,
         n_particles=N_PARTICLES,
         n_iterations=N_ITERATIONS,
-        cd3=1.0,
-        cd28=1.0,
+        cd3=10.0,
+        cd28=10.0,
     )
     
     print("\nDone!")

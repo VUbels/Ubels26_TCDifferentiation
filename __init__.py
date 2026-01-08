@@ -1,4 +1,4 @@
-from .constants import *
+from constants import *
 from .models.model_3_full import (
     TcellDifferentiationODE,
     integrate_ode,

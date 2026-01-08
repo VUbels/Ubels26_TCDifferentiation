@@ -10,7 +10,8 @@ from visualization import generate_single_condition_plots
 from models.model_1_literature import LiteratureModel_1_S
 SELECTED_MODEL = LiteratureModel_1_S
 
-BASE_OUTPUT_DIR = Path(__file__).parent / "results"
+from constants import OUTPUT_DIR
+OUTPUT_DIR = OUTPUT_DIR
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -21,7 +22,8 @@ if __name__ == "__main__":
     del temp_model
     
     folder_name = model_name.replace(' ', '_').replace('(', '').replace(')', '')
-    results_dir = BASE_OUTPUT_DIR / folder_name
+    results_dir = OUTPUT_DIR / folder_name
+    
     
     # Load data
     data = prepare_all_conditions(device=device)

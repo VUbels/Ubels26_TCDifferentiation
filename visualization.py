@@ -185,7 +185,11 @@ def _plot_best_fit(model_class, df, cond, device, param_names, model_name, save_
     
     # Get best parameters
     best_row = df.iloc[0]
-    best_params = torch.tensor(best_row[param_names].values, dtype=torch.float32, device=device)
+    best_params = torch.tensor(
+        best_row[param_names].values.astype(float),  # <-- Add .astype(float)
+        dtype=torch.float32, 
+        device=device
+    )
     best_loss = best_row['loss']
     
     # Simulate
@@ -242,7 +246,7 @@ def _plot_top_n_fits(model_class, df, cond, device, param_names, model_name, n_v
         # Collect predictions
         all_preds = []
         for _, row in top_df.iterrows():
-            params = torch.tensor(row[param_names].values, dtype=torch.float32, device=device)
+            params = torch.tensor(row[param_names].values.astype(float), dtype=torch.float32, device=device)
             
             model = model_class(n_batch=1, device=device)
             model.set_condition(cd3=cond.cd3, cd28=cond.cd28)
@@ -392,7 +396,7 @@ def _plot_all_conditions_grid(model_class, all_results, data, device, param_name
         cond = data[(cd3, cd28)]
         
         best_row = df.iloc[0]
-        best_params = torch.tensor(best_row[param_names].values, dtype=torch.float32, device=device)
+        best_params = torch.tensor(best_row[param_names].values.astype(float), dtype=torch.float32, device=device)
         best_loss = best_row['loss']
         
         t_fine = torch.linspace(3, 11, 100, device=device)

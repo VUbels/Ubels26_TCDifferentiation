@@ -2,8 +2,8 @@
 
 import torch
 import torch.nn as nn
-from .base import BaseTcellModel
-from ..constants import IL12_0
+from models.base import BaseTcellModel
+from constants import IL12_0
 
 
 class FullModel_3_SD(BaseTcellModel):
