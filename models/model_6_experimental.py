@@ -1,0 +1,311 @@
+# models/model_6_experimental.py
+"""
+Experimental-based model.
+
+Model summary:
+1. Negative terms promote outward differentiation (degradation in equations)
+2. Hill functions included (based on experimental observations)
+3. Parameter set based on experimental observations
+
+Parameters: 50 total
+- Basal production: 4
+- Basal degradation: 4
+- Interaction k: 25 (k2,k3,k4,k6,k8,k9,k10,k11,k12,k13,k14,k15,k16,k17,k18,k20,k21,k22,k23,k24,k25,k26,k30,k31,k32)
+- Hill K: 8 (K10,K12,K17,K18,K21,K22,K25,K30)
+- Hill h: 8 (h10,h12,h17,h18,h21,h22,h25,h30)
+- IL4 inhibition of IL12: 1
+"""
+
+import torch
+import torch.nn as nn
+from models.base import BaseTcellModel
+from constants import IL12_0
+
+
+class ExperimentalModel_6_SD(BaseTcellModel):
+    """
+    Experimental-based 50-parameter model with outward differentiation.
+    
+    Interactions based on experimental observations.
+    Includes Hill functions for nonlinear responses.
+    Negative terms promote outward differentiation (degradation).
+    """
+    
+    model_name = "Experimental Model - SD (50 params)"
+    
+    def __init__(self, n_batch: int = 1, device: torch.device = torch.device("cpu")):
+        super().__init__(n_batch, device)
+        
+        # Basal rates (8)
+        self.log_k_prod = nn.Parameter(torch.zeros(n_batch, 4, device=device))
+        self.log_k_deg = nn.Parameter(torch.zeros(n_batch, 4, device=device))
+        
+        # IL-2 equation: k2, k3, k4, k6 (4)
+        self.log_k2 = nn.Parameter(torch.zeros(n_batch, device=device))   # CD3 promotes IL2 plasticity
+        self.log_k3 = nn.Parameter(torch.zeros(n_batch, device=device))   # CD28 -> IL2
+        self.log_k4 = nn.Parameter(torch.zeros(n_batch, device=device))   # IL21 -> IL2
+        self.log_k6 = nn.Parameter(torch.zeros(n_batch, device=device))   # IL4 promotes IL2 plasticity
+        
+        # IFNg equation: k8, k9, k10, k11, k12, k13, k14 (7)
+        self.log_k8 = nn.Parameter(torch.zeros(n_batch, device=device))   # CD3 -> IFNg
+        self.log_k9 = nn.Parameter(torch.zeros(n_batch, device=device))   # CD28 -> IFNg
+        self.log_k10 = nn.Parameter(torch.zeros(n_batch, device=device))  # IL2 -> IFNg (with Hill)
+        self.log_k11 = nn.Parameter(torch.zeros(n_batch, device=device))  # IL2*IL12 -> IFNg
+        self.log_k12 = nn.Parameter(torch.zeros(n_batch, device=device))  # IFNg feedback (with Hill)
+        self.log_k13 = nn.Parameter(torch.zeros(n_batch, device=device))  # IL12 -> IFNg
+        self.log_k14 = nn.Parameter(torch.zeros(n_batch, device=device))  # IL4 promotes IFNg plasticity
+        
+        # IL-21 equation: k15, k16, k17, k18, k20, k21 (6)
+        self.log_k15 = nn.Parameter(torch.zeros(n_batch, device=device))  # CD3 -> IL21
+        self.log_k16 = nn.Parameter(torch.zeros(n_batch, device=device))  # CD28 -> IL21
+        self.log_k17 = nn.Parameter(torch.zeros(n_batch, device=device))  # IL2 -> IL21 (with Hill)
+        self.log_k18 = nn.Parameter(torch.zeros(n_batch, device=device))  # IL21 feedback (with Hill)
+        self.log_k20 = nn.Parameter(torch.zeros(n_batch, device=device))  # IL2 promotes IL21 plasticity
+        self.log_k21 = nn.Parameter(torch.zeros(n_batch, device=device))  # IL4 promotes IL21 plasticity (with Hill)
+        
+        # IL-4 equation: k22, k23, k24, k25, k26, k30, k31, k32 (8)
+        self.log_k22 = nn.Parameter(torch.zeros(n_batch, device=device))  # Basal IL4 (with Hill)
+        self.log_k23 = nn.Parameter(torch.zeros(n_batch, device=device))  # CD3 promotes IL4 plasticity
+        self.log_k24 = nn.Parameter(torch.zeros(n_batch, device=device))  # CD28 -> IL4
+        self.log_k25 = nn.Parameter(torch.zeros(n_batch, device=device))  # CD28 -> IL4 (with Hill)
+        self.log_k26 = nn.Parameter(torch.zeros(n_batch, device=device))  # IL2 -> IL4
+        self.log_k30 = nn.Parameter(torch.zeros(n_batch, device=device))  # IL4 feedback (with Hill)
+        self.log_k31 = nn.Parameter(torch.zeros(n_batch, device=device))  # IFNg promotes IL4 plasticity
+        self.log_k32 = nn.Parameter(torch.zeros(n_batch, device=device))  # IL12 promotes IL4 plasticity
+        
+        # Hill K thresholds (8)
+        self.log_K10 = nn.Parameter(torch.zeros(n_batch, device=device))
+        self.log_K12 = nn.Parameter(torch.zeros(n_batch, device=device))
+        self.log_K17 = nn.Parameter(torch.zeros(n_batch, device=device))
+        self.log_K18 = nn.Parameter(torch.zeros(n_batch, device=device))
+        self.log_K21 = nn.Parameter(torch.zeros(n_batch, device=device))
+        self.log_K22 = nn.Parameter(torch.zeros(n_batch, device=device))
+        self.log_K25 = nn.Parameter(torch.zeros(n_batch, device=device))
+        self.log_K30 = nn.Parameter(torch.zeros(n_batch, device=device))
+        
+        # Hill h coefficients (8)
+        self.log_h10_minus1 = nn.Parameter(torch.zeros(n_batch, device=device))
+        self.log_h12_minus1 = nn.Parameter(torch.zeros(n_batch, device=device))
+        self.log_h17_minus1 = nn.Parameter(torch.zeros(n_batch, device=device))
+        self.log_h18_minus1 = nn.Parameter(torch.zeros(n_batch, device=device))
+        self.log_h21_minus1 = nn.Parameter(torch.zeros(n_batch, device=device))
+        self.log_h22_minus1 = nn.Parameter(torch.zeros(n_batch, device=device))
+        self.log_h25_minus1 = nn.Parameter(torch.zeros(n_batch, device=device))
+        self.log_h30_minus1 = nn.Parameter(torch.zeros(n_batch, device=device))
+        
+        # IL-4 inhibition of IL-12 (1)
+        self.log_K_IL4inh = nn.Parameter(torch.zeros(n_batch, device=device))
+    
+    @property
+    def n_params(self) -> int:
+        return 50
+    
+    def hill_activation(self, X, K, h):
+        X_safe = X.clamp(min=1e-8)
+        K_safe = K.clamp(min=1e-8)
+        X_h = X_safe.pow(h)
+        K_h = K_safe.pow(h)
+        return X_h / (K_h + X_h)
+    
+    def hill_inhibition(self, X, K, h):
+        X_safe = X.clamp(min=1e-8)
+        K_safe = K.clamp(min=1e-8)
+        X_h = X_safe.pow(h)
+        K_h = K_safe.pow(h)
+        return K_h / (K_h + X_h)
+    
+    def il12_effective(self, IL4):
+        """IL-12 effectiveness reduced by IL-4."""
+        K_IL4inh = torch.exp(self.log_K_IL4inh)
+        return IL12_0 / (1 + K_IL4inh * IL4)
+    
+    def forward(self, t, y):
+        IL2, IFNg, IL21, IL4 = y[:, 0], y[:, 1], y[:, 2], y[:, 3]
+        
+        # Get positive parameters
+        k_prod = torch.exp(self.log_k_prod)
+        k_deg = torch.exp(self.log_k_deg)
+        
+        k2 = torch.exp(self.log_k2)
+        k3 = torch.exp(self.log_k3)
+        k4 = torch.exp(self.log_k4)
+        k6 = torch.exp(self.log_k6)
+        
+        k8 = torch.exp(self.log_k8)
+        k9 = torch.exp(self.log_k9)
+        k10 = torch.exp(self.log_k10)
+        k11 = torch.exp(self.log_k11)
+        k12 = torch.exp(self.log_k12)
+        k13 = torch.exp(self.log_k13)
+        k14 = torch.exp(self.log_k14)
+        
+        k15 = torch.exp(self.log_k15)
+        k16 = torch.exp(self.log_k16)
+        k17 = torch.exp(self.log_k17)
+        k18 = torch.exp(self.log_k18)
+        k20 = torch.exp(self.log_k20)
+        k21 = torch.exp(self.log_k21)
+        
+        k22 = torch.exp(self.log_k22)
+        k23 = torch.exp(self.log_k23)
+        k24 = torch.exp(self.log_k24)
+        k25 = torch.exp(self.log_k25)
+        k26 = torch.exp(self.log_k26)
+        k30 = torch.exp(self.log_k30)
+        k31 = torch.exp(self.log_k31)
+        k32 = torch.exp(self.log_k32)
+        
+        # Hill parameters
+        K10 = torch.exp(self.log_K10)
+        K12 = torch.exp(self.log_K12)
+        K17 = torch.exp(self.log_K17)
+        K18 = torch.exp(self.log_K18)
+        K21 = torch.exp(self.log_K21)
+        K22 = torch.exp(self.log_K22)
+        K25 = torch.exp(self.log_K25)
+        K30 = torch.exp(self.log_K30)
+        
+        h10 = 1 + torch.exp(self.log_h10_minus1)
+        h12 = 1 + torch.exp(self.log_h12_minus1)
+        h17 = 1 + torch.exp(self.log_h17_minus1)
+        h18 = 1 + torch.exp(self.log_h18_minus1)
+        h21 = 1 + torch.exp(self.log_h21_minus1)
+        h22 = 1 + torch.exp(self.log_h22_minus1)
+        h25 = 1 + torch.exp(self.log_h25_minus1)
+        h30 = 1 + torch.exp(self.log_h30_minus1)
+        
+        IL12_eff = self.il12_effective(IL4)
+        
+        # Hill function evaluations
+        cd3_t = torch.full((self.n_batch,), self.cd3, device=self.device)
+        cd28_t = torch.full((self.n_batch,), self.cd28, device=self.device)
+        
+        H_inh_CD28_k10 = self.hill_inhibition(cd28_t, K10, h10)
+        H_act_CD3_k12 = self.hill_activation(cd3_t, K12, h12)
+        H_inh_CD28_k17 = self.hill_inhibition(cd28_t, K17, h17)
+        H_act_IL21_k18 = self.hill_activation(IL21, K18, h18)
+        H_inh_CD3_k21 = self.hill_inhibition(cd3_t, K21, h21)
+        H_inh_CD3_k22 = self.hill_inhibition(cd3_t, K22, h22)
+        H_inh_IL2_k25 = self.hill_inhibition(IL2, K25, h25)
+        H_inh_CD3_k30 = self.hill_inhibition(cd3_t, K30, h30)
+        
+        # IL-2: CD28, IL21 promote; CD3, IL4 promote plasticity (degradation)
+        dIL2 = (
+            k_prod[:, 0]
+            + k3 * self.cd28
+            + k4 * IL21
+            - k2 * self.cd3 * IL2        # CD3 promotes plasticity (* IL2)
+            - k6 * IL4 * IL2             # IL4 promotes plasticity (* IL2)
+            - k_deg[:, 0] * IL2
+        )
+        
+        # IFNg: CD3, CD28, IL2 (with Hill), IL2*IL12, IFNg feedback (with Hill), IL12 promote; IL4 promotes plasticity
+        dIFNg = (
+            k_prod[:, 1]
+            + k8 * self.cd3
+            + k9 * self.cd28
+            + k10 * IL2 * H_inh_CD28_k10
+            + k11 * IL2 * IL12_eff
+            + k12 * IFNg * H_act_CD3_k12
+            + k13 * IL12_eff
+            - k14 * IL4 * IFNg           # IL4 promotes plasticity (* IFNg)
+            - k_deg[:, 1] * IFNg
+        )
+        
+        # IL-21: CD3, CD28, IL2 (with Hill), IL21 feedback (with Hill) promote; IL2, IL4 (with Hill) promote plasticity
+        dIL21 = (
+            k_prod[:, 2]
+            + k15 * self.cd3
+            + k16 * self.cd28
+            + k17 * IL2 * H_inh_CD28_k17
+            + k18 * H_act_IL21_k18
+            - k20 * IL2 * IL21                       # IL2 promotes plasticity (* IL21)
+            - k21 * IL4 * H_inh_CD3_k21 * IL21       # IL4 promotes plasticity (* IL21)
+            - k_deg[:, 2] * IL21
+        )
+        
+        # IL-4: Basal (with Hill), CD28, CD28 (with Hill), IL2, IL4 feedback (with Hill) promote; CD3, IFNg, IL12 promote plasticity
+        dIL4 = (
+            k_prod[:, 3]
+            + k22 * H_inh_CD3_k22
+            + k24 * self.cd28
+            + k25 * self.cd28 * H_inh_IL2_k25
+            + k26 * IL2
+            + k30 * IL4 * H_inh_CD3_k30
+            - k23 * self.cd3 * IL4       # CD3 promotes plasticity (* IL4)
+            - k31 * IFNg * IL4           # IFNg promotes plasticity (* IL4)
+            - k32 * IL12_eff * IL4       # IL12 promotes plasticity (* IL4)
+            - k_deg[:, 3] * IL4
+        )
+        
+        return torch.stack([dIL2, dIFNg, dIL21, dIL4], dim=1)
+    
+    @staticmethod
+    def get_param_bounds(device):
+        """Parameter bounds for 50 parameters."""
+        lb = torch.zeros(50)
+        ub = torch.zeros(50)
+        
+        # Basal production [0:4]
+        lb[0:4] = -4.0
+        ub[0:4] = 2.0
+        
+        # Basal degradation [4:8]
+        lb[4:8] = -4.0
+        ub[4:8] = 1.0
+        
+        # Interaction k values [8:33]: 0.0001 to 100
+        lb[8:33] = -9.2
+        ub[8:33] = 4.6
+        
+        # Hill K [33:41]
+        lb[33:41] = -2.0
+        ub[33:41] = 3.0
+        
+        # Hill h [41:49]
+        lb[41:49] = -2.0
+        ub[41:49] = 1.5
+        
+        # K_IL4inh [49]
+        lb[49] = -4.0
+        ub[49] = 0.0
+        
+        return lb.to(device), ub.to(device)
+    
+    @staticmethod
+    def get_param_names():
+        """Ordered list of 50 parameter names."""
+        return (
+            # Basal rates (8)
+            ['log_k_prod_IL2', 'log_k_prod_IFNg', 'log_k_prod_IL21', 'log_k_prod_IL4'] +
+            ['log_k_deg_IL2', 'log_k_deg_IFNg', 'log_k_deg_IL21', 'log_k_deg_IL4'] +
+            # IL2 interactions (4)
+            ['log_k2', 'log_k3', 'log_k4', 'log_k6'] +
+            # IFNg interactions (7)
+            ['log_k8', 'log_k9', 'log_k10', 'log_k11', 'log_k12', 'log_k13', 'log_k14'] +
+            # IL21 interactions (6)
+            ['log_k15', 'log_k16', 'log_k17', 'log_k18', 'log_k20', 'log_k21'] +
+            # IL4 interactions (8)
+            ['log_k22', 'log_k23', 'log_k24', 'log_k25', 'log_k26', 'log_k30', 'log_k31', 'log_k32'] +
+            # Hill K (8)
+            ['log_K10', 'log_K12', 'log_K17', 'log_K18', 'log_K21', 'log_K22', 'log_K25', 'log_K30'] +
+            # Hill h (8)
+            ['log_h10_m1', 'log_h12_m1', 'log_h17_m1', 'log_h18_m1', 'log_h21_m1', 'log_h22_m1', 'log_h25_m1', 'log_h30_m1'] +
+            # IL4 inhibition of IL12 (1)
+            ['log_K_IL4inh']
+        )
+    
+    @staticmethod
+    def params_to_model(positions, model):
+        """Map PSO positions to model parameters."""
+        idx = 0
+        with torch.no_grad():
+            # Basal rates
+            model.log_k_prod.data = positions[:, idx:idx+4]; idx += 4
+            model.log_k_deg.data = positions[:, idx:idx+4]; idx += 4
+            
+            # IL2: k2, k3, k4, k6
+            model.log_k2.data = positions[:, idx]; idx += 1
+            model.log_k3.data = positions[:, idx]; idx += 1
+            model.log_k4.data = positions[:, idx]; idx += 1
+            model.log_k6.data = positions[:, idx]; idx += 1

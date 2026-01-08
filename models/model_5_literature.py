@@ -1,12 +1,11 @@
-# models/model_1_literature.py
+# models/model_5_literature.py
 """
 Literature-based model.
 
 Model summary
-1. Negative terms inhibit differentiation (subtract from production)
+1. Negative terms promote outward differentiation (degradation in equations)
 2. No Hill functions
 3. Reduced parameter set based on literature support
-4. Only basal degradation (k_deg * species)
 
 Parameters: 28 total
 - Basal production: 4
@@ -21,16 +20,15 @@ from models.base import BaseTcellModel
 from constants import IL12_0
 
 
-class LiteratureModel_1_S(BaseTcellModel):
+class LiteratureModel_5_SD(BaseTcellModel):
     """
-    Literature-based 28-parameter model.
+    Literature-based 28-parameter model with outward differentiation included.
     
     Simplified interactions based on well-established literature.
     No Hill functions - all interactions are mass-action.
-    Negative terms inhibit differentiation (subtract from production).
     """
     
-    model_name = "Literature Model - S (28 params)"
+    model_name = "Literature Model - SD (28 params)"
     
     def __init__(self, n_batch: int = 1, device: torch.device = torch.device("cpu")):
         super().__init__(n_batch, device)
@@ -110,14 +108,14 @@ class LiteratureModel_1_S(BaseTcellModel):
         
         IL12_eff = self.il12_effective(IL4)
         
-        # IL-2: CD3, CD28, IL12 promote; IL21, IL4 inhibit differentiation
+        # IL-2: CD3, CD28, IL12 promote; IL21, IL4 promote plasticity
         dIL2 = (
             k_prod[:, 0]
             + k1 * self.cd3
             + k3 * self.cd28
             + k7 * IL12_eff
-            - k5 * IL21        # IL21 inhibits differentiation (not * IL2)
-            - k6 * IL4         # IL4 inhibits differentiation (not * IL2)
+            - k5 * IL21 * IL2       # IL21 promotes IL2 plasticity
+            - k6 * IL4 * IL2        # IL4 promotes IL2 plasticity
             - k_deg[:, 0] * IL2
         )
         
@@ -128,14 +126,14 @@ class LiteratureModel_1_S(BaseTcellModel):
             + k9 * self.cd28
             + k11 * IL2 * IL12_eff
             + k12 * IFNg       # Positive feedback
-            - k14 * IL4        # IL4 inhibits differentiation (not * IFNg)
+            - k14 * IL4 * IFNg        # IL4 promotes IFNg plasticity
             - k_deg[:, 1] * IFNg
         )
         
         # IL-21: Only basal production; IL2 inhibits differentiation
         dIL21 = (
             k_prod[:, 2]
-            - k20 * IL2        # IL2 inhibits differentiation (not * IL21)
+            - k20 * IL2 * IL21        # IL2 promotes IL21 plasticity
             - k_deg[:, 2] * IL21
         )
         
@@ -147,9 +145,9 @@ class LiteratureModel_1_S(BaseTcellModel):
             + k26 * IL2
             + k28 * IL21
             + k30 * IL4          # Positive feedback
-            - k29 * IL21         # IL21 inhibits differentiation (not * IL4)
-            - k31 * IFNg         # IFNg inhibits differentiation (not * IL4)
-            - k32 * IL12_eff     # IL12 inhibits differentiation (not * IL4)
+            - k29 * IL21 * IL4        # IL21 promotes IL4 plasticity
+            - k31 * IFNg * IL4         # IFNg promotes IL4 plasticity
+            - k32 * IL12_eff * IL4     # IL12 promotes IL4 plasticity
             - k_deg[:, 3] * IL4
         )
         

@@ -19,8 +19,8 @@ from optimisation import run_all_conditions
 # SELECT YOUR MODEL HERE
 # =============================================================================
 
-from models.model_3_full import FullModel
-SELECTED_MODEL = FullModel
+from models.model_4_full import FullModel_4_SD
+SELECTED_MODEL = FullModel_4_SD
 
 
 # =============================================================================
