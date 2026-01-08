@@ -1,4 +1,4 @@
-# models/model_3_full.py
+# models/model_4_full.py
 
 import torch
 import torch.nn as nn
@@ -6,7 +6,7 @@ from models.base import BaseTcellModel
 from constants import IL12_0
 
 
-class FullModel_3_SD(BaseTcellModel):
+class FullModel_4_SD(BaseTcellModel):
     """
     Full 59-parameter model with Hill functions and all interactions.
     """

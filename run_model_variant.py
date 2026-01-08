@@ -19,11 +19,24 @@ from optimization import run_single_condition
 # SELECT YOUR MODEL HERE
 # =============================================================================
 
-#from models.model_3_full import FullModel
-#SELECTED_MODEL = FullModel
+#from models.model_1_literature import LiteratureModel_1_S
+#SELECTED_MODEL = LiteratureModel_1_S
 
-from models.model_1_literature import LiteratureModel_1_S
-SELECTED_MODEL = LiteratureModel_1_S
+from models.model_2_experimental import ExperimentalModel_2_S
+SELECTED_MODEL = ExperimentalModel_2_S
+
+#from models.model_3_combined import CombinedModel_3_S
+#SELECTED_MODEL = CombinedModel_3_S
+
+#from models.model_4_full import FullModel_4_SD
+#SELECTED_MODEL = FullModel_4_SD
+
+#from models.model_5_literature import LiteratureModel_5_SD
+#SELECTED_MODEL = LiteratureModel_5_SD
+
+#from models.model_6_experimental import ExperimentalModel_6_SD
+#SELECTED_MODEL = ExperimentalModel_6_SD
+
 
 # =============================================================================
 # SETTINGS
@@ -70,8 +83,8 @@ if __name__ == "__main__":
         n_swarms_per_batch=N_SWARMS,
         n_particles=N_PARTICLES,
         n_iterations=N_ITERATIONS,
-        cd3=10.0,
-        cd28=10.0,
+        cd3=1.0,
+        cd28=1.0,
     )
     
     print("\nDone!")
