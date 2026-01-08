@@ -1,4 +1,4 @@
-# models/model_full.py
+# models/model_3_full.py
 
 import torch
 import torch.nn as nn

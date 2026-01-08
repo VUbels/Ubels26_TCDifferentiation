@@ -7,7 +7,7 @@ from pathlib import Path
 from data import prepare_all_conditions
 from visualization import generate_single_condition_plots
 
-from models.model_full import FullModel
+from models.model_1_literature import LiteratureModel_1_S
 SELECTED_MODEL = FullModel
 
 BASE_OUTPUT_DIR = Path(__file__).parent / "results"
