@@ -13,7 +13,7 @@ import torch
 from pathlib import Path
 
 from data import prepare_all_conditions
-from optimisation import run_single_condition
+from optimization import run_single_condition
 
 # =============================================================================
 # SELECT YOUR MODEL HERE
