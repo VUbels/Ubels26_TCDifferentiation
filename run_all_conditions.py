@@ -1,19 +1,13 @@
 # run_all_conditions.py
 """
-Run a single model on all 6 CD3/CD28 conditions.
-Used for full model fitting.
-
-Usage:
-    1. Change SELECTED_MODEL below to the model you want
-    2. Adjust settings if needed
-    3. Run: python run_all_conditions.py
+Run global fitting: shared parameters across all 6 CD3/CD28 conditions.
 """
 
 import torch
 from pathlib import Path
 
 from data import prepare_all_conditions
-from optimisation import run_all_conditions
+from optimization import run_global_fit
 
 # =============================================================================
 # SELECT YOUR MODEL HERE
@@ -22,12 +16,11 @@ from optimisation import run_all_conditions
 from models.model_4_full import FullModel_4_SD
 SELECTED_MODEL = FullModel_4_SD
 
-
 # =============================================================================
 # SETTINGS
 # =============================================================================
 
-BASE_OUTPUT_DIR = Path("/mnt/d/UVA/TCR/2026_Updated/PSO_results")
+BASE_OUTPUT_DIR = Path(__file__).parent / "results"
 
 TARGET_FITS = 10000
 N_SWARMS = 300
@@ -42,24 +35,20 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")
     
-    # Get model name for output folder
     temp_model = SELECTED_MODEL(n_batch=1, device=device)
     model_name = temp_model.model_name
     del temp_model
     
-    # Create model-specific output directory
     folder_name = model_name.replace(' ', '_').replace('(', '').replace(')', '')
     output_dir = BASE_OUTPUT_DIR / folder_name
     
     print(f"Model: {model_name}")
     print(f"Output: {output_dir}")
     
-    # Load data
     print("Loading data...")
     data = prepare_all_conditions(device=device)
     
-    # Run
-    summary = run_all_conditions(
+    results = run_global_fit(
         model_class=SELECTED_MODEL,
         data=data,
         device=device,

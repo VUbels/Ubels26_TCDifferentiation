@@ -7,8 +7,8 @@ from pathlib import Path
 from data import prepare_all_conditions
 from visualization import generate_all_conditions_plots
 
-from models.model_4_full.py import FullModel_4_SD
-SELECTED_MODEL = FullModel
+from models.model_4_full import FullModel_4_SD
+SELECTED_MODEL = FullModel_4_SD
 
 BASE_OUTPUT_DIR = Path(__file__).parent / "results"
 

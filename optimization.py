@@ -1,4 +1,4 @@
-# optimisation.py
+# optimization.py
 """
 PSO optimization for T cell differentiation models.
 

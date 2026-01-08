@@ -1,4 +1,20 @@
 # models/model_4_full.py
+"""
+Full model with degradation-type inhibition and fixed CD3/CD28 parameters.
+
+CD3/CD28-linked parameters (k1,k2,k3,k8,k9,k15,k16,k23,k24) fixed to 1
+to prevent compensation between k and CD3/CD28 values.
+
+Negative terms act on degradation (multiply by species concentration).
+
+Parameters: 50 total (was 59)
+- Basal production: 4
+- Basal degradation: 4
+- Interaction k: 23 (k4-k7, k10-k14, k17-k21, k22,k25-k32) - removed 9 CD3/CD28 linked
+- Hill K: 9
+- Hill h: 9
+- IL4 inhibition of IL12: 1
+"""
 
 import torch
 import torch.nn as nn
@@ -8,10 +24,13 @@ from constants import IL12_0
 
 class FullModel_4_SD(BaseTcellModel):
     """
-    Full 59-parameter model with Hill functions and all interactions.
+    Full 50-parameter model with Hill functions.
+    
+    CD3/CD28-linked rate constants fixed to 1.
+    Inhibitory terms act on degradation (multiply by species).
     """
     
-    model_name = "Full Model (59 params)"
+    model_name = "Full Model - SD (50 params)"
     
     def __init__(self, n_batch: int = 1, device: torch.device = torch.device("cpu")):
         super().__init__(n_batch, device)
@@ -20,37 +39,28 @@ class FullModel_4_SD(BaseTcellModel):
         self.log_k_prod = nn.Parameter(torch.zeros(n_batch, 4, device=device))
         self.log_k_deg = nn.Parameter(torch.zeros(n_batch, 4, device=device))
         
-        # IL-2 equation: k1-k7
-        self.log_k1 = nn.Parameter(torch.zeros(n_batch, device=device))
-        self.log_k2 = nn.Parameter(torch.zeros(n_batch, device=device))
-        self.log_k3 = nn.Parameter(torch.zeros(n_batch, device=device))
+        # IL-2 equation: k4-k7 only (k1,k2,k3 fixed to 1)
         self.log_k4 = nn.Parameter(torch.zeros(n_batch, device=device))
         self.log_k5 = nn.Parameter(torch.zeros(n_batch, device=device))
         self.log_k6 = nn.Parameter(torch.zeros(n_batch, device=device))
         self.log_k7 = nn.Parameter(torch.zeros(n_batch, device=device))
         
-        # IFNg equation: k8-k14
-        self.log_k8 = nn.Parameter(torch.zeros(n_batch, device=device))
-        self.log_k9 = nn.Parameter(torch.zeros(n_batch, device=device))
+        # IFNg equation: k10-k14 only (k8,k9 fixed to 1)
         self.log_k10 = nn.Parameter(torch.zeros(n_batch, device=device))
         self.log_k11 = nn.Parameter(torch.zeros(n_batch, device=device))
         self.log_k12 = nn.Parameter(torch.zeros(n_batch, device=device))
         self.log_k13 = nn.Parameter(torch.zeros(n_batch, device=device))
         self.log_k14 = nn.Parameter(torch.zeros(n_batch, device=device))
         
-        # IL-21 equation: k15-k21
-        self.log_k15 = nn.Parameter(torch.zeros(n_batch, device=device))
-        self.log_k16 = nn.Parameter(torch.zeros(n_batch, device=device))
+        # IL-21 equation: k17-k21 only (k15,k16 fixed to 1)
         self.log_k17 = nn.Parameter(torch.zeros(n_batch, device=device))
         self.log_k18 = nn.Parameter(torch.zeros(n_batch, device=device))
         self.log_k19 = nn.Parameter(torch.zeros(n_batch, device=device))
         self.log_k20 = nn.Parameter(torch.zeros(n_batch, device=device))
         self.log_k21 = nn.Parameter(torch.zeros(n_batch, device=device))
         
-        # IL-4 equation: k22-k32
+        # IL-4 equation: k22,k25-k32 only (k23,k24 fixed to 1)
         self.log_k22 = nn.Parameter(torch.zeros(n_batch, device=device))
-        self.log_k23 = nn.Parameter(torch.zeros(n_batch, device=device))
-        self.log_k24 = nn.Parameter(torch.zeros(n_batch, device=device))
         self.log_k25 = nn.Parameter(torch.zeros(n_batch, device=device))
         self.log_k26 = nn.Parameter(torch.zeros(n_batch, device=device))
         self.log_k27 = nn.Parameter(torch.zeros(n_batch, device=device))
@@ -87,7 +97,7 @@ class FullModel_4_SD(BaseTcellModel):
     
     @property
     def n_params(self) -> int:
-        return 59
+        return 50
     
     def hill_activation(self, X, K, h):
         X_safe = X.clamp(min=1e-8)
@@ -113,30 +123,28 @@ class FullModel_4_SD(BaseTcellModel):
         k_prod = torch.exp(self.log_k_prod)
         k_deg = torch.exp(self.log_k_deg)
         
-        k1 = torch.exp(self.log_k1)
-        k2 = torch.exp(self.log_k2)
-        k3 = torch.exp(self.log_k3)
+        # IL-2 params (k1,k2,k3 = 1 fixed)
         k4 = torch.exp(self.log_k4)
         k5 = torch.exp(self.log_k5)
         k6 = torch.exp(self.log_k6)
         k7 = torch.exp(self.log_k7)
-        k8 = torch.exp(self.log_k8)
-        k9 = torch.exp(self.log_k9)
+        
+        # IFNg params (k8,k9 = 1 fixed)
         k10 = torch.exp(self.log_k10)
         k11 = torch.exp(self.log_k11)
         k12 = torch.exp(self.log_k12)
         k13 = torch.exp(self.log_k13)
         k14 = torch.exp(self.log_k14)
-        k15 = torch.exp(self.log_k15)
-        k16 = torch.exp(self.log_k16)
+        
+        # IL-21 params (k15,k16 = 1 fixed)
         k17 = torch.exp(self.log_k17)
         k18 = torch.exp(self.log_k18)
         k19 = torch.exp(self.log_k19)
         k20 = torch.exp(self.log_k20)
         k21 = torch.exp(self.log_k21)
+        
+        # IL-4 params (k23,k24 = 1 fixed, k25 kept)
         k22 = torch.exp(self.log_k22)
-        k23 = torch.exp(self.log_k23)
-        k24 = torch.exp(self.log_k24)
         k25 = torch.exp(self.log_k25)
         k26 = torch.exp(self.log_k26)
         k27 = torch.exp(self.log_k27)
@@ -146,6 +154,7 @@ class FullModel_4_SD(BaseTcellModel):
         k31 = torch.exp(self.log_k31)
         k32 = torch.exp(self.log_k32)
         
+        # Hill parameters
         K10 = torch.exp(self.log_K10)
         K12 = torch.exp(self.log_K12)
         K17 = torch.exp(self.log_K17)
@@ -171,6 +180,7 @@ class FullModel_4_SD(BaseTcellModel):
         cd3_t = torch.full((self.n_batch,), self.cd3, device=self.device)
         cd28_t = torch.full((self.n_batch,), self.cd28, device=self.device)
         
+        # Hill functions
         H_inh_CD28_k10 = self.hill_inhibition(cd28_t, K10, h10)
         H_act_CD3_k12 = self.hill_activation(cd3_t, K12, h12)
         H_inh_CD28_k17 = self.hill_inhibition(cd28_t, K17, h17)
@@ -181,37 +191,59 @@ class FullModel_4_SD(BaseTcellModel):
         H_act_CD28_k27 = self.hill_activation(cd28_t, K27, h27)
         H_inh_CD3_k30 = self.hill_inhibition(cd3_t, K30, h30)
         
+        # IL-2: k1=k2=k3=1 (fixed), DEGRADATION type
         dIL2 = (
             k_prod[:, 0]
-            + k1 * self.cd3 + k3 * self.cd28 + k4 * IL21 + k7 * IL12_eff
-            - k2 * self.cd3 * IL2 - k5 * IL21 * IL2 - k6 * IL4 * IL2
+            + self.cd3                      # was k1 * self.cd3
+            + self.cd28                     # was k3 * self.cd28
+            + k4 * IL21
+            + k7 * IL12_eff
+            - self.cd3 * IL2                # was k2 * self.cd3 * IL2 (degradation)
+            - k5 * IL21 * IL2               # degradation
+            - k6 * IL4 * IL2                # degradation
             - k_deg[:, 0] * IL2
         )
         
+        # IFNg: k8=k9=1 (fixed), DEGRADATION type
         dIFNg = (
             k_prod[:, 1]
-            + k8 * self.cd3 + k9 * self.cd28
-            + k10 * IL2 * H_inh_CD28_k10 + k11 * IL2 * IL12_eff
-            + k12 * IFNg * H_act_CD3_k12 + k13 * IL12_eff
-            - k14 * IL4 * IFNg
+            + self.cd3                      # was k8 * self.cd3
+            + self.cd28                     # was k9 * self.cd28
+            + k10 * IL2 * H_inh_CD28_k10
+            + k11 * IL2 * IL12_eff
+            + k12 * IFNg * H_act_CD3_k12
+            + k13 * IL12_eff
+            - k14 * IL4 * IFNg              # degradation
             - k_deg[:, 1] * IFNg
         )
         
+        # IL-21: k15=k16=1 (fixed), DEGRADATION type
         dIL21 = (
             k_prod[:, 2]
-            + k15 * self.cd3 + k16 * self.cd28
-            + k17 * IL2 * H_inh_CD28_k17 + k18 * H_act_IL21_k18 + k19 * IL4
-            - k20 * IL2 * IL21 - k21 * IL4 * IL21 * H_inh_CD3_k21
+            + self.cd3                      # was k15 * self.cd3
+            + self.cd28                     # was k16 * self.cd28
+            + k17 * IL2 * H_inh_CD28_k17
+            + k18 * H_act_IL21_k18
+            + k19 * IL4
+            - k20 * IL2 * IL21              # degradation
+            - k21 * IL4 * H_inh_CD3_k21 * IL21  # degradation
             - k_deg[:, 2] * IL21
         )
         
+        # IL-4: k23=k24=1 (fixed), k25 kept, DEGRADATION type
         dIL4 = (
             k_prod[:, 3]
-            + k22 * H_inh_CD3_k22 + k24 * self.cd28
-            + k25 * self.cd28 * H_inh_IL2_k25 + k26 * IL2 + k28 * IL21
+            + k22 * H_inh_CD3_k22
+            + self.cd28                     # was k24 * self.cd28
+            + k25 * self.cd28 * H_inh_IL2_k25
+            + k26 * IL2
+            + k28 * IL21
             + k30 * IL4 * H_inh_CD3_k30
-            - k23 * self.cd3 * IL4 - k27 * IL2 * IL4 * H_act_CD28_k27
-            - k29 * IL21 * IL4 - k31 * IFNg * IL4 - k32 * IL12_eff * IL4
+            - self.cd3 * IL4                # was k23 * self.cd3 * IL4 (degradation)
+            - k27 * IL2 * H_act_CD28_k27 * IL4  # degradation
+            - k29 * IL21 * IL4              # degradation
+            - k31 * IFNg * IL4              # degradation
+            - k32 * IL12_eff * IL4          # degradation
             - k_deg[:, 3] * IL4
         )
         
@@ -219,26 +251,55 @@ class FullModel_4_SD(BaseTcellModel):
     
     @staticmethod
     def get_param_bounds(device):
-        lb = torch.zeros(59)
-        ub = torch.zeros(59)
+        lb = torch.zeros(50)
+        ub = torch.zeros(50)
         
-        lb[0:4] = -4.0;   ub[0:4] = 2.0    # production
-        lb[4:8] = -4.0;   ub[4:8] = 1.0    # degradation
-        lb[8:40] = -9.2;  ub[8:40] = 4.6   # interaction k (0.0001 to 100)
-        lb[40:49] = -2.0; ub[40:49] = 3.0  # Hill K
-        lb[49:58] = -2.0; ub[49:58] = 1.5  # Hill h
-        lb[58] = -4.0;    ub[58] = 0.0     # IL4 inhibition
+        # Basal production [0:4]
+        lb[0:4] = -4.0
+        ub[0:4] = 2.0
+        
+        # Basal degradation [4:8]
+        lb[4:8] = -4.0
+        ub[4:8] = 1.0
+        
+        # Interaction k values [8:31]: 23 parameters
+        # k4-k7 (4), k10-k14 (5), k17-k21 (5), k22,k25-k32 (9) = 23
+        lb[8:31] = -9.2
+        ub[8:31] = 4.6
+        
+        # Hill K [31:40]: 9 parameters
+        lb[31:40] = -2.0
+        ub[31:40] = 3.0
+        
+        # Hill h [40:49]: 9 parameters
+        lb[40:49] = -2.0
+        ub[40:49] = 1.5
+        
+        # K_IL4inh [49]
+        lb[49] = -4.0
+        ub[49] = 0.0
         
         return lb.to(device), ub.to(device)
     
     @staticmethod
     def get_param_names():
         return (
-            [f'log_k_prod_{i}' for i in ['IL2', 'IFNg', 'IL21', 'IL4']] +
-            [f'log_k_deg_{i}' for i in ['IL2', 'IFNg', 'IL21', 'IL4']] +
-            [f'log_k{i}' for i in range(1, 33)] +
+            # Basal rates (8)
+            ['log_k_prod_IL2', 'log_k_prod_IFNg', 'log_k_prod_IL21', 'log_k_prod_IL4'] +
+            ['log_k_deg_IL2', 'log_k_deg_IFNg', 'log_k_deg_IL21', 'log_k_deg_IL4'] +
+            # IL2 interactions: k4-k7 (4)
+            ['log_k4', 'log_k5', 'log_k6', 'log_k7'] +
+            # IFNg interactions: k10-k14 (5)
+            ['log_k10', 'log_k11', 'log_k12', 'log_k13', 'log_k14'] +
+            # IL21 interactions: k17-k21 (5)
+            ['log_k17', 'log_k18', 'log_k19', 'log_k20', 'log_k21'] +
+            # IL4 interactions: k22, k25-k32 (9)
+            ['log_k22', 'log_k25', 'log_k26', 'log_k27', 'log_k28', 'log_k29', 'log_k30', 'log_k31', 'log_k32'] +
+            # Hill K (9)
             ['log_K10', 'log_K12', 'log_K17', 'log_K18', 'log_K21', 'log_K22', 'log_K25', 'log_K27', 'log_K30'] +
+            # Hill h (9)
             ['log_h10_m1', 'log_h12_m1', 'log_h17_m1', 'log_h18_m1', 'log_h21_m1', 'log_h22_m1', 'log_h25_m1', 'log_h27_m1', 'log_h30_m1'] +
+            # IL4 inhibition (1)
             ['log_K_IL4inh']
         )
     
@@ -246,12 +307,50 @@ class FullModel_4_SD(BaseTcellModel):
     def params_to_model(positions, model):
         idx = 0
         with torch.no_grad():
+            # Basal rates (8)
             model.log_k_prod.data = positions[:, idx:idx+4]; idx += 4
             model.log_k_deg.data = positions[:, idx:idx+4]; idx += 4
-            for i in range(1, 33):
-                getattr(model, f'log_k{i}').data = positions[:, idx]; idx += 1
+            
+            # IL2: k4-k7 (4)
+            model.log_k4.data = positions[:, idx]; idx += 1
+            model.log_k5.data = positions[:, idx]; idx += 1
+            model.log_k6.data = positions[:, idx]; idx += 1
+            model.log_k7.data = positions[:, idx]; idx += 1
+            
+            # IFNg: k10-k14 (5)
+            model.log_k10.data = positions[:, idx]; idx += 1
+            model.log_k11.data = positions[:, idx]; idx += 1
+            model.log_k12.data = positions[:, idx]; idx += 1
+            model.log_k13.data = positions[:, idx]; idx += 1
+            model.log_k14.data = positions[:, idx]; idx += 1
+            
+            # IL21: k17-k21 (5)
+            model.log_k17.data = positions[:, idx]; idx += 1
+            model.log_k18.data = positions[:, idx]; idx += 1
+            model.log_k19.data = positions[:, idx]; idx += 1
+            model.log_k20.data = positions[:, idx]; idx += 1
+            model.log_k21.data = positions[:, idx]; idx += 1
+            
+            # IL4: k22, k25-k32 (9)
+            model.log_k22.data = positions[:, idx]; idx += 1
+            model.log_k25.data = positions[:, idx]; idx += 1
+            model.log_k26.data = positions[:, idx]; idx += 1
+            model.log_k27.data = positions[:, idx]; idx += 1
+            model.log_k28.data = positions[:, idx]; idx += 1
+            model.log_k29.data = positions[:, idx]; idx += 1
+            model.log_k30.data = positions[:, idx]; idx += 1
+            model.log_k31.data = positions[:, idx]; idx += 1
+            model.log_k32.data = positions[:, idx]; idx += 1
+            
+            # Hill K (9)
             for name in ['K10', 'K12', 'K17', 'K18', 'K21', 'K22', 'K25', 'K27', 'K30']:
                 getattr(model, f'log_{name}').data = positions[:, idx]; idx += 1
+            
+            # Hill h (9)
             for name in ['h10', 'h12', 'h17', 'h18', 'h21', 'h22', 'h25', 'h27', 'h30']:
                 getattr(model, f'log_{name}_minus1').data = positions[:, idx]; idx += 1
+            
+            # K_IL4inh (1)
             model.log_K_IL4inh.data = positions[:, idx]; idx += 1
+        
+        assert idx == 50, f"Expected 50 parameters, got {idx}"
