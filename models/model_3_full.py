@@ -6,7 +6,7 @@ from .base import BaseTcellModel
 from ..constants import IL12_0
 
 
-class FullModel(BaseTcellModel):
+class FullModel_3_SD(BaseTcellModel):
     """
     Full 59-parameter model with Hill functions and all interactions.
     """

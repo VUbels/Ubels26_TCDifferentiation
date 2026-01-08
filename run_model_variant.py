@@ -19,7 +19,7 @@ from optimisation import run_single_condition
 # SELECT YOUR MODEL HERE
 # =============================================================================
 
-from models.model_full import FullModel
+from models.model_3_full import FullModel
 SELECTED_MODEL = FullModel
 
 # from models.model_no_hill import NoHillModel
