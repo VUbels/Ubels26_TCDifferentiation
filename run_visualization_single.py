@@ -7,9 +7,6 @@ from pathlib import Path
 from data import prepare_all_conditions
 from visualization import generate_single_condition_plots
 
-# =============================================================================
-# SELECT YOUR MODEL HERE
-# =============================================================================
 from models.model_full import FullModel
 SELECTED_MODEL = FullModel
 
