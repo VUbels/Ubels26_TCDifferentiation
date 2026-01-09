@@ -22,14 +22,14 @@ from optimization import run_single_condition
 #from models.model_1_literature import LiteratureModel_1_S
 #SELECTED_MODEL = LiteratureModel_1_S
 
-from models.model_2_experimental import ExperimentalModel_2_S
-SELECTED_MODEL = ExperimentalModel_2_S
+#from models.model_2_experimental import ExperimentalModel_2_S
+#SELECTED_MODEL = ExperimentalModel_2_S
 
 #from models.model_3_combined import CombinedModel_3_S
 #SELECTED_MODEL = CombinedModel_3_S
 
-#from models.model_4_full import FullModel_4_SD
-#SELECTED_MODEL = FullModel_4_SD
+from models.model_4_full import FullModel_4_SD
+SELECTED_MODEL = FullModel_4_SD
 
 #from models.model_5_literature import LiteratureModel_5_SD
 #SELECTED_MODEL = LiteratureModel_5_SD
@@ -45,9 +45,9 @@ SELECTED_MODEL = ExperimentalModel_2_S
 BASE_OUTPUT_DIR = Path("/mnt/d/UVA/TCR/2026_Updated/PSO_results")
 
 TARGET_FITS = 5000
-N_SWARMS = 300
+N_SWARMS = 500
 N_PARTICLES = 200
-N_ITERATIONS = 130
+N_ITERATIONS = 150
 
 # =============================================================================
 # RUN

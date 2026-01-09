@@ -23,9 +23,9 @@ SELECTED_MODEL = FullModel_4_SD
 BASE_OUTPUT_DIR = Path(__file__).parent / "results"
 
 TARGET_FITS = 10000
-N_SWARMS = 300
+N_SWARMS = 500
 N_PARTICLES = 200
-N_ITERATIONS = 130
+N_ITERATIONS = 150
 
 # =============================================================================
 # RUN
