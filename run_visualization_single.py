@@ -7,8 +7,8 @@ from pathlib import Path
 from data import prepare_all_conditions
 from visualization import generate_single_condition_plots
 
-from models.model_4_full import FullModel_4_SD
-SELECTED_MODEL = FullModel_4_SD
+from models.model_5_literature import LiteratureModel_5_SD
+SELECTED_MODEL = LiteratureModel_5_SD
 
 from constants import OUTPUT_DIR
 OUTPUT_DIR = OUTPUT_DIR

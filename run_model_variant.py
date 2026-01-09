@@ -28,14 +28,14 @@ from optimization import run_single_condition
 #from models.model_3_combined import CombinedModel_3_S
 #SELECTED_MODEL = CombinedModel_3_S
 
-from models.model_4_full import FullModel_4_SD
-SELECTED_MODEL = FullModel_4_SD
+#from models.model_4_full import FullModel_4_SD
+#SELECTED_MODEL = FullModel_4_SD
 
 #from models.model_5_literature import LiteratureModel_5_SD
 #SELECTED_MODEL = LiteratureModel_5_SD
 
-#from models.model_6_experimental import ExperimentalModel_6_SD
-#SELECTED_MODEL = ExperimentalModel_6_SD
+from models.model_6_experimental import ExperimentalModel_6_SD
+SELECTED_MODEL = ExperimentalModel_6_SD
 
 
 # =============================================================================

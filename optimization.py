@@ -400,9 +400,9 @@ def run_all_conditions(
     device: torch.device,
     output_dir: Path,
     target_valid_fits: int = 10000,
-    n_swarms_per_batch: int = 300,
+    n_swarms_per_batch: int = 500,
     n_particles: int = 200,
-    n_iterations: int = 130,
+    n_iterations: int = 150,
     verbose: bool = True,
 ):
     """

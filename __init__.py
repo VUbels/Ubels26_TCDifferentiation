@@ -1,5 +1,5 @@
 from constants import *
-from .models.model_3_full import (
+from .models.model_4_full import (
     TcellDifferentiationODE,
     integrate_ode,
     compute_loss,

@@ -7,7 +7,7 @@ import torch
 from pathlib import Path
 
 from data import prepare_all_conditions
-from optimization import run_global_fit
+from optimization import run_all_conditions
 
 # =============================================================================
 # SELECT YOUR MODEL HERE
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     print("Loading data...")
     data = prepare_all_conditions(device=device)
     
-    results = run_global_fit(
+    results = run_all_conditions(
         model_class=SELECTED_MODEL,
         data=data,
         device=device,
